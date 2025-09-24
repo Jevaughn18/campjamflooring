@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import campjamLogo from "@/assets/campjam-logo.png";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -29,7 +29,12 @@ const Header = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
+            <img 
+              src={campjamLogo} 
+              alt="CampJam Flooring Logo" 
+              className="h-10 w-10 md:h-12 md:w-12"
+            />
             <h1 className="text-2xl md:text-3xl font-bold text-primary tracking-wide">
               CampJam Flooring
             </h1>
@@ -62,14 +67,6 @@ const Header = () => {
               Contact
             </button>
           </nav>
-
-          {/* CTA Button */}
-          <Button 
-            onClick={() => scrollToSection("contact")}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 elegant-shadow transition-all duration-300 hover:gold-glow"
-          >
-            Get Quote
-          </Button>
         </div>
       </div>
     </header>
