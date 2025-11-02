@@ -96,7 +96,7 @@ const Contact = () => {
                     </div>
                     <div>
                       <h4 className="font-semibold text-foreground">Phone</h4>
-                      <p className="text-muted-foreground">(555) 123-4567</p>
+                      <p className="text-muted-foreground">1 (876) 363-5640</p>
                     </div>
                   </div>
 
@@ -116,7 +116,7 @@ const Contact = () => {
                   <h4 className="font-semibold text-foreground mb-4">Follow Us</h4>
                   <div className="flex space-x-4">
                     <a
-                      href="#"
+                      href="https://www.instagram.com/campjamflooring/"
                       className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 hover:gold-glow"
                     >
                       <Instagram size={20} />

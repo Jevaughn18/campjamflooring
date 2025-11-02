@@ -38,7 +38,7 @@ const Hero = () => {
           size="lg"
           className="bg-primary text-primary-foreground hover:bg-primary/90 text-lg px-8 py-6 elegant-shadow transition-all duration-300 hover:gold-glow transform hover:scale-105"
         >
-          Get a Free Quote
+          Get started
         </Button>
       </div>
       

@@ -69,7 +69,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center space-x-3">
                 <Phone size={16} className="text-primary flex-shrink-0" />
-                <span className="text-background/80 text-sm">(555) 123-4567</span>
+                <span className="text-background/80 text-sm">1 (876) 363-5640</span>
               </li>
               <li className="flex items-center space-x-3">
                 <Mail size={16} className="text-primary flex-shrink-0" />
@@ -83,7 +83,7 @@ const Footer = () => {
             <h4 className="text-lg font-semibold mb-4 text-background">Follow Us</h4>
             <div className="flex space-x-4">
               <a
-                href="#"
+                href="https://www.instagram.com/campjamflooring/"
                 className="w-10 h-10 bg-background/10 rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-background transition-all duration-300 hover:gold-glow"
                 aria-label="Instagram"
               >
