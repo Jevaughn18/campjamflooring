@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,8 @@ interface Review {
   date: string;
 }
 
+const REVIEWS_STORAGE_KEY = "campjam_reviews";
+
 const Reviews = () => {
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -23,7 +25,25 @@ const Reviews = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [reviews, setReviews] = useState<Review[]>([]);
+  // Load reviews from localStorage on mount
+  const [reviews, setReviews] = useState<Review[]>(() => {
+    try {
+      const savedReviews = localStorage.getItem(REVIEWS_STORAGE_KEY);
+      return savedReviews ? JSON.parse(savedReviews) : [];
+    } catch (error) {
+      console.error("Error loading reviews from localStorage:", error);
+      return [];
+    }
+  });
+
+  // Save reviews to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(REVIEWS_STORAGE_KEY, JSON.stringify(reviews));
+    } catch (error) {
+      console.error("Error saving reviews to localStorage:", error);
+    }
+  }, [reviews]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
