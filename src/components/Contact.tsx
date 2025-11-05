@@ -68,7 +68,7 @@ const Contact = () => {
             </span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Ready to transform your space? Contact us for a free consultation and quote.
+            Ready to transform your space? Contact us for a consultation.
           </p>
         </div>
 
@@ -86,7 +86,7 @@ const Contact = () => {
                     </div>
                     <div>
                       <h4 className="font-semibold text-foreground">Address</h4>
-                      <p className="text-muted-foreground">123 Flooring Street<br />City, State 12345</p>
+                      <p className="text-muted-foreground">Portmore, St.Catherine<br />Jamaica</p>
                     </div>
                   </div>
 

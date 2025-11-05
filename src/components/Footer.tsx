@@ -50,6 +50,14 @@ const Footer = () => {
               </li>
               <li>
                 <button
+                  onClick={() => scrollToSection("reviews")}
+                  className="text-background/80 hover:text-primary transition-colors duration-300"
+                >
+                  Reviews
+                </button>
+              </li>
+              <li>
+                <button
                   onClick={() => scrollToSection("contact")}
                   className="text-background/80 hover:text-primary transition-colors duration-300"
                 >
@@ -65,7 +73,7 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-center space-x-3">
                 <MapPin size={16} className="text-primary flex-shrink-0" />
-                <span className="text-background/80 text-sm">123 Flooring Street, City, State 12345</span>
+                <span className="text-background/80 text-sm">Portmore, St.Catherine, Jamaica</span>
               </li>
               <li className="flex items-center space-x-3">
                 <Phone size={16} className="text-primary flex-shrink-0" />
