@@ -23,52 +23,7 @@ const Reviews = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const initialReviews: Review[] = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      rating: 5,
-      comment: "Outstanding work! The team transformed my kitchen with beautiful tile work. Professional, clean, and right on schedule.",
-      date: "2 weeks ago"
-    },
-    {
-      id: 2,
-      name: "Michael Brown",
-      rating: 5,
-      comment: "Exceptional craftsmanship and attention to detail. My bathroom looks absolutely stunning. Highly recommend CampJam Flooring!",
-      date: "1 month ago"
-    },
-    {
-      id: 3,
-      name: "Jennifer Williams",
-      rating: 5,
-      comment: "From consultation to completion, the experience was seamless. The flooring in my living room exceeded all expectations.",
-      date: "1 month ago"
-    },
-    {
-      id: 4,
-      name: "David Thompson",
-      rating: 5,
-      comment: "Top-notch service and quality. They helped me choose the perfect tiles and the installation was flawless. Worth every penny!",
-      date: "2 months ago"
-    },
-    {
-      id: 5,
-      name: "Lisa Martinez",
-      rating: 5,
-      comment: "CampJam Flooring did an amazing job on my entire home. Professional team, fair pricing, and beautiful results. Couldn't be happier!",
-      date: "2 months ago"
-    },
-    {
-      id: 6,
-      name: "Robert Anderson",
-      rating: 5,
-      comment: "Excellent work ethic and superior quality. They turned my vision into reality. Definitely the best flooring company in the area.",
-      date: "3 months ago"
-    }
-  ];
-
-  const [reviews, setReviews] = useState<Review[]>(initialReviews);
+  const [reviews, setReviews] = useState<Review[]>([]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -229,26 +184,34 @@ const Reviews = () => {
         )}
 
         {/* Reviews Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {reviews.map((review) => (
-            <Card key={review.id} className="soft-shadow hover:elegant-shadow transition-all duration-300">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex gap-1">
-                    {renderStars(review.rating)}
+        {reviews.length > 0 ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {reviews.map((review) => (
+              <Card key={review.id} className="soft-shadow hover:elegant-shadow transition-all duration-300">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex gap-1">
+                      {renderStars(review.rating)}
+                    </div>
+                    <span className="text-sm text-muted-foreground">{review.date}</span>
                   </div>
-                  <span className="text-sm text-muted-foreground">{review.date}</span>
-                </div>
 
-                <p className="text-foreground mb-4 italic">"{review.comment}"</p>
+                  <p className="text-foreground mb-4 italic">"{review.comment}"</p>
 
-                <div className="border-t border-border pt-4">
-                  <p className="font-semibold text-foreground">{review.name}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  <div className="border-t border-border pt-4">
+                    <p className="font-semibold text-foreground">{review.name}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-xl text-muted-foreground">
+              No reviews yet. Be the first to share your experience!
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );
