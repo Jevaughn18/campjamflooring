@@ -5,16 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { Star } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 interface Review {
   id: number;
   name: string;
   rating: number;
   comment: string;
-  date: string;
+  created_at: string;
 }
-
-const REVIEWS_STORAGE_KEY = "campjam_reviews";
 
 const Reviews = () => {
   const [showForm, setShowForm] = useState(false);
@@ -24,26 +23,35 @@ const Reviews = () => {
     comment: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Load reviews from localStorage on mount
-  const [reviews, setReviews] = useState<Review[]>(() => {
-    try {
-      const savedReviews = localStorage.getItem(REVIEWS_STORAGE_KEY);
-      return savedReviews ? JSON.parse(savedReviews) : [];
-    } catch (error) {
-      console.error("Error loading reviews from localStorage:", error);
-      return [];
-    }
-  });
-
-  // Save reviews to localStorage whenever they change
+  // Load reviews from Supabase on mount
   useEffect(() => {
+    fetchReviews();
+  }, []);
+
+  const fetchReviews = async () => {
     try {
-      localStorage.setItem(REVIEWS_STORAGE_KEY, JSON.stringify(reviews));
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setReviews(data || []);
     } catch (error) {
-      console.error("Error saving reviews to localStorage:", error);
+      console.error('Error fetching reviews:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load reviews. Please refresh the page.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, [reviews]);
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -69,18 +77,22 @@ const Reviews = () => {
     }
 
     try {
-      // Simulate submission delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { data, error } = await supabase
+        .from('reviews')
+        .insert([
+          {
+            name: formData.name,
+            rating: formData.rating,
+            comment: formData.comment,
+          }
+        ])
+        .select();
 
-      const newReview: Review = {
-        id: reviews.length + 1,
-        name: formData.name,
-        rating: formData.rating,
-        comment: formData.comment,
-        date: "Just now",
-      };
+      if (error) throw error;
 
-      setReviews([newReview, ...reviews]);
+      // Refresh reviews list
+      await fetchReviews();
+
       setFormData({ name: "", rating: 5, comment: "" });
       setShowForm(false);
 
@@ -89,6 +101,7 @@ const Reviews = () => {
         description: "Thank you for your feedback. Your review has been posted.",
       });
     } catch (error) {
+      console.error('Error submitting review:', error);
       toast({
         title: "Error",
         description: "Failed to submit review. Please try again.",
@@ -97,6 +110,27 @@ const Reviews = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
+
+    if (diffInMinutes < 1) return "Just now";
+    if (diffInMinutes < 60) return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
+
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
+
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
+
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    if (diffInWeeks < 4) return `${diffInWeeks} ${diffInWeeks === 1 ? 'week' : 'weeks'} ago`;
+
+    const diffInMonths = Math.floor(diffInDays / 30);
+    return `${diffInMonths} ${diffInMonths === 1 ? 'month' : 'months'} ago`;
   };
 
   const renderStars = (rating: number) => {
@@ -204,7 +238,11 @@ const Reviews = () => {
         )}
 
         {/* Reviews Grid */}
-        {reviews.length > 0 ? (
+        {isLoading ? (
+          <div className="text-center py-12">
+            <p className="text-xl text-muted-foreground">Loading reviews...</p>
+          </div>
+        ) : reviews.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {reviews.map((review) => (
               <Card key={review.id} className="soft-shadow hover:elegant-shadow transition-all duration-300">
@@ -213,7 +251,7 @@ const Reviews = () => {
                     <div className="flex gap-1">
                       {renderStars(review.rating)}
                     </div>
-                    <span className="text-sm text-muted-foreground">{review.date}</span>
+                    <span className="text-sm text-muted-foreground">{formatDate(review.created_at)}</span>
                   </div>
 
                   <p className="text-foreground mb-4 italic">"{review.comment}"</p>
