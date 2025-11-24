@@ -291,42 +291,42 @@ const Admin = () => {
 
     return (
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
         onClick={closeDeleteConfirm}
       >
         <Card
-          className="w-full max-w-md mx-4 soft-shadow"
+          className="w-full max-w-md soft-shadow"
           onClick={(e) => e.stopPropagation()}
         >
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <AlertTriangle className="w-6 h-6 text-destructive" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-destructive/10 rounded-full flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-destructive" />
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">Delete Review?</h3>
-                <p className="text-sm text-muted-foreground">This action cannot be undone</p>
+              <div className="min-w-0">
+                <h3 className="text-base sm:text-lg font-semibold text-foreground">Delete Review?</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground">This action cannot be undone</p>
               </div>
             </div>
 
-            <div className="bg-muted p-4 rounded-lg mb-6">
-              <p className="text-sm text-foreground italic">
+            <div className="bg-muted p-3 sm:p-4 rounded-lg mb-4 sm:mb-6">
+              <p className="text-xs sm:text-sm text-foreground italic break-words">
                 "{deleteConfirm.reviewText.substring(0, 150)}{deleteConfirm.reviewText.length > 150 ? '...' : ''}"
               </p>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 variant="outline"
                 onClick={closeDeleteConfirm}
-                className="flex-1"
+                className="flex-1 w-full"
               >
                 Cancel
               </Button>
               <Button
                 variant="destructive"
                 onClick={handleDelete}
-                className="flex-1"
+                className="flex-1 w-full"
               >
                 Delete Review
               </Button>
@@ -342,44 +342,45 @@ const Admin = () => {
     <>
       <DeleteConfirmDialog />
 
-      <div className="min-h-screen bg-secondary/30 py-12">
+      <div className="min-h-screen bg-secondary/30 py-8 sm:py-12">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
-                <p className="text-muted-foreground">Logged in as: {user.email}</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Admin Dashboard</h1>
+                <p className="text-sm sm:text-base text-muted-foreground truncate">Logged in as: {user.email}</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   onClick={handleLogout}
+                  className="w-full sm:w-auto"
                 >
                   Logout
                 </Button>
               </div>
             </div>
 
-            <h2 className="text-2xl font-semibold mb-4">Customer Reviews</h2>
+            <h2 className="text-xl sm:text-2xl font-semibold mb-4">Customer Reviews</h2>
             {reviews.length > 0 ? (
               <div className="space-y-4">
                 {reviews.map((review) => (
                   <Card key={review.id} className="soft-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex items-start justify-between gap-2 sm:gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                             <div className="flex gap-1">
                               {renderStars(review.rating)}
                             </div>
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-xs sm:text-sm text-muted-foreground">
                               {formatDate(review.created_at)}
                             </span>
                           </div>
 
-                          <p className="text-foreground mb-3 italic">"{review.comment}"</p>
+                          <p className="text-sm sm:text-base text-foreground mb-3 italic break-words">"{review.comment}"</p>
 
-                          <p className="font-semibold text-foreground">— {review.name}</p>
+                          <p className="text-sm sm:text-base font-semibold text-foreground truncate">— {review.name}</p>
                         </div>
 
                         <Button
@@ -387,12 +388,12 @@ const Admin = () => {
                           size="icon"
                           onClick={() => openDeleteConfirm(review.id, review.comment)}
                           disabled={deletingId === review.id}
-                          className="flex-shrink-0"
+                          className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10"
                         >
                           {deletingId === review.id ? (
-                            <span className="animate-spin">⏳</span>
+                            <span className="animate-spin text-sm">⏳</span>
                           ) : (
-                            <Trash2 size={18} />
+                            <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                           )}
                         </Button>
                       </div>
@@ -402,7 +403,7 @@ const Admin = () => {
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-xl text-muted-foreground">No reviews yet.</p>
+                <p className="text-lg sm:text-xl text-muted-foreground">No reviews yet.</p>
               </div>
             )}
           </div>

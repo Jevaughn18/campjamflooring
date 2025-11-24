@@ -201,29 +201,29 @@ const Gallery = () => {
             onClick={closeProject}
           >
             <div
-              className="relative w-full h-full flex flex-col items-center justify-center p-4"
+              className="relative w-full h-full flex flex-col items-center justify-center p-2 sm:p-4"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close Button */}
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute top-4 right-4 text-white hover:bg-white/20 z-10"
+                className="absolute top-2 right-2 sm:top-4 sm:right-4 text-white hover:bg-white/20 z-10 w-10 h-10 sm:w-12 sm:h-12"
                 onClick={closeProject}
               >
-                <X size={24} />
+                <X className="w-5 h-5 sm:w-6 sm:h-6" />
               </Button>
 
               {/* Project Title */}
-              <div className="absolute top-4 left-4 text-white z-10">
-                <h3 className="text-2xl font-bold">{selectedProject.title}</h3>
-                <p className="text-sm text-white/80">
+              <div className="absolute top-2 left-2 sm:top-4 sm:left-4 text-white z-10 max-w-[60%] sm:max-w-none">
+                <h3 className="text-lg sm:text-2xl font-bold truncate">{selectedProject.title}</h3>
+                <p className="text-xs sm:text-sm text-white/80">
                   {currentMediaIndex + 1} / {selectedProject.media.length}
                 </p>
               </div>
 
               {/* Media Display */}
-              <div className="relative max-w-5xl max-h-[80vh] w-full flex items-center justify-center">
+              <div className="relative max-w-5xl max-h-[70vh] sm:max-h-[80vh] w-full flex items-center justify-center px-12 sm:px-16">
                 {selectedProject.media[currentMediaIndex].type === "image" ? (
                   <img
                     src={selectedProject.media[currentMediaIndex].src}
@@ -249,29 +249,29 @@ const Gallery = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 w-12 h-12"
+                    className="absolute left-1 sm:left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 w-10 h-10 sm:w-12 sm:h-12"
                     onClick={prevMedia}
                   >
-                    <ChevronLeft size={32} />
+                    <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 w-12 h-12"
+                    className="absolute right-1 sm:right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 w-10 h-10 sm:w-12 sm:h-12"
                     onClick={nextMedia}
                   >
-                    <ChevronRight size={32} />
+                    <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
                   </Button>
                 </>
               )}
 
               {/* Thumbnail Navigation */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 overflow-x-auto max-w-full px-4">
+              <div className="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 flex gap-1 sm:gap-2 overflow-x-auto max-w-[90%] sm:max-w-full px-2 sm:px-4 scrollbar-hide">
                 {selectedProject.media.map((media, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentMediaIndex(index)}
-                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                    className={`flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 transition-all ${
                       index === currentMediaIndex
                         ? "border-primary scale-110"
                         : "border-white/30 hover:border-white/60"
@@ -287,7 +287,7 @@ const Gallery = () => {
                       />
                     ) : (
                       <div className="w-full h-full bg-black/50 flex items-center justify-center">
-                        <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                         </svg>
                       </div>
