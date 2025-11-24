@@ -133,7 +133,7 @@ After running the SQL:
 2. Click "Click here to Set Or Reset Password"
 3. Enter your email
 4. Check email for reset link
-5. Click link and set new password
+5. Click link and set new passwordd
 
 ---
 
