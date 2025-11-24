@@ -1,4 +1,5 @@
-import { Instagram, Facebook, MapPin, Phone, Mail } from "lucide-react";
+import { Instagram, Facebook, MapPin, Phone, Mail, Shield } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   const scrollToSection = (sectionId: string) => {
@@ -118,10 +119,19 @@ const Footer = () => {
         </div>
 
         {/* Copyright */}
-        <div className="border-t border-background/20 mt-12 pt-8 text-center">
-          <p className="text-background/60 text-sm">
-            © 2025 CampJam Flooring. All Rights Reserved.
-          </p>
+        <div className="border-t border-background/20 mt-12 pt-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-background/60 text-sm">
+              © 2025 CampJam Flooring. All Rights Reserved.
+            </p>
+            <Link
+              to="/admin"
+              className="flex items-center gap-2 text-background/60 hover:text-primary transition-colors text-sm"
+            >
+              <Shield size={16} />
+              Admin
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
