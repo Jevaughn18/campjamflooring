@@ -7,36 +7,42 @@ import project1Thumbnail from "@/assets/project1/Project1Thumbnail.png";
 import project1Img1 from "@/assets/project1/IMG_1.jpeg";
 import project1Img2 from "@/assets/project1/IMG_2.jpeg";
 import project1Img3 from "@/assets/project1/IMG_3.jpeg";
+import project1Vid from "@/assets/project1/IMG_2819.mp4";
 
 // Project 2 imports
 import project2Thumbnail from "@/assets/project2/project2thumbnail.jpeg";
 import project2Img1 from "@/assets/project2/img1.jpeg";
 import project2Img2 from "@/assets/project2/img2.jpeg";
 import project2Img3 from "@/assets/project2/img3.jpeg";
+import project2Vid from "@/assets/project2/vid1.MP4";
 
 // Project 3 imports
 import project3Thumbnail from "@/assets/project3/thumbnail.jpeg";
 import project3Pic1 from "@/assets/project3/pic1.jpeg";
 import project3Pic2 from "@/assets/project3/pic2.jpeg";
 import project3Pic3 from "@/assets/project3/pic3.jpeg";
+import project3Vid from "@/assets/project3/project3vid.MP4";
 
 // Project 4 imports
 import project4Thumbnail from "@/assets/project4/thumbnail.jpeg";
 import project4Tile1 from "@/assets/project4/tile1.jpeg";
 import project4Tile2 from "@/assets/project4/tile2.jpeg";
 import project4Tile3 from "@/assets/project4/tile3.jpeg";
+import project4Vid from "@/assets/project4/vid2.MP4";
 
 // Project 5 imports
 import project5Thumbnail from "@/assets/project5/thumbnail.jpeg";
 import project5Pic1 from "@/assets/project5/pic1.jpeg";
 import project5Pic2 from "@/assets/project5/pic2.jpeg";
 import project5Pic3 from "@/assets/project5/pic3.jpeg";
+import project5Vid from "@/assets/project5/vid5.MP4";
 
 // Project 6 imports
 import project6Thumbnail from "@/assets/project6/thumbnail.jpeg";
 import project6Pic1 from "@/assets/project6/pic1.jpeg";
 import project6Pic2 from "@/assets/project6/pic2.jpeg";
 import project6Pic3 from "@/assets/project6/pic3.jpeg";
+import project6Vid from "@/assets/project6/vid6.MP4";
 
 interface ProjectMedia {
   type: "image" | "video";
@@ -63,7 +69,7 @@ const Gallery = () => {
         { type: "image", src: project1Img1 },
         { type: "image", src: project1Img2 },
         { type: "image", src: project1Img3 },
-        { type: "video", src: "/src/assets/project1/IMG_2819.mp4" },
+        { type: "video", src: project1Vid },
       ],
     },
     {
@@ -74,7 +80,7 @@ const Gallery = () => {
         { type: "image", src: project2Img1 },
         { type: "image", src: project2Img2 },
         { type: "image", src: project2Img3 },
-        { type: "video", src: "/src/assets/project2/vid1.MP4" },
+        { type: "video", src: project2Vid },
       ],
     },
     {
@@ -85,7 +91,7 @@ const Gallery = () => {
         { type: "image", src: project3Pic1 },
         { type: "image", src: project3Pic2 },
         { type: "image", src: project3Pic3 },
-        { type: "video", src: "/src/assets/project3/project3vid.MP4" },
+        { type: "video", src: project3Vid },
       ],
     },
     {
@@ -96,7 +102,7 @@ const Gallery = () => {
         { type: "image", src: project4Tile1 },
         { type: "image", src: project4Tile2 },
         { type: "image", src: project4Tile3 },
-        { type: "video", src: "/src/assets/project4/vid2.MP4" },
+        { type: "video", src: project4Vid },
       ],
     },
     {
@@ -107,7 +113,7 @@ const Gallery = () => {
         { type: "image", src: project5Pic1 },
         { type: "image", src: project5Pic2 },
         { type: "image", src: project5Pic3 },
-        { type: "video", src: "/src/assets/project5/vid5.MP4" },
+        { type: "video", src: project5Vid },
       ],
     },
     {
@@ -118,7 +124,7 @@ const Gallery = () => {
         { type: "image", src: project6Pic1 },
         { type: "image", src: project6Pic2 },
         { type: "image", src: project6Pic3 },
-        { type: "video", src: "/src/assets/project6/vid6.MP4" },
+        { type: "video", src: project6Vid },
       ],
     },
   ];
