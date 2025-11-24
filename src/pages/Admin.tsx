@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
-import { Star, Trash2, Lock, Mail, KeyRound, AlertTriangle, UserPlus, Users, X, KeySquare } from "lucide-react";
+import { Star, Trash2, Lock, Mail, KeyRound, AlertTriangle, UserPlus, Users, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface Review {
@@ -42,9 +42,6 @@ const Admin = () => {
   const [showAdminManagement, setShowAdminManagement] = useState(false);
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState("");
-  const [showChangePassword, setShowChangePassword] = useState(false);
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -177,74 +174,32 @@ const Admin = () => {
     }
   };
 
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (newPassword !== confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      toast({
-        title: "Error",
-        description: "Password must be at least 6 characters long.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Password Changed!",
-        description: "Your password has been successfully updated.",
-      });
-      setShowChangePassword(false);
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to change password.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleAddAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const DEFAULT_PASSWORD = "CampJam2025!";
+
     try {
-      // Add email to admin_users whitelist table
-      const { error: dbError } = await supabase
+      // Add to whitelist
+      const { data: insertData, error: dbError } = await supabase
         .from('admin_users')
         .insert([
           {
             email: newAdminEmail.toLowerCase(),
             created_by: user.email,
           }
-        ]);
+        ])
+        .select();
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        throw dbError;
+      }
 
       toast({
-        title: "Admin Email Added!",
-        description: `${newAdminEmail} is now whitelisted. Create their account manually in Supabase Authentication.`,
-        duration: 8000,
+        title: "Admin Added Successfully!",
+        description: `${newAdminEmail} can now log in with password: ${DEFAULT_PASSWORD}`,
+        duration: 10000,
       });
 
       setNewAdminEmail("");
@@ -252,7 +207,7 @@ const Admin = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to add admin email.",
+        description: error.message || "Failed to add admin.",
         variant: "destructive",
       });
     }
@@ -423,11 +378,6 @@ const Admin = () => {
                 {isLoading ? "Please wait..." : "Sign In"}
               </Button>
             </form>
-
-            <div className="mt-6 text-center text-sm text-muted-foreground">
-              <p>First time logging in? Use the default password provided to you.</p>
-              <p className="mt-2">You can change your password after logging in.</p>
-            </div>
           </CardContent>
         </Card>
       </div>
@@ -502,23 +452,10 @@ const Admin = () => {
               <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    setShowAdminManagement(!showAdminManagement);
-                    setShowChangePassword(false);
-                  }}
+                  onClick={() => setShowAdminManagement(!showAdminManagement)}
                 >
                   <Users size={18} className="mr-2" />
                   Manage Admins
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowChangePassword(!showChangePassword);
-                    setShowAdminManagement(false);
-                  }}
-                >
-                  <KeySquare size={18} className="mr-2" />
-                  Change Password
                 </Button>
                 <Button
                   variant="outline"
@@ -537,17 +474,17 @@ const Admin = () => {
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                     <p className="text-sm text-blue-900">
                       <strong>How to add a new admin:</strong><br />
-                      1. Add their email below to whitelist them<br />
-                      2. Go to Supabase → Authentication → Add User manually<br />
-                      3. Create their account with a default password<br />
-                      4. Share the email and default password with them<br />
-                      5. They can change their password after logging in
+                      1. Enter their email below and click "Add Admin"<br />
+                      2. Give them the default password shown in the success message<br />
+                      3. They can log in with their email and the default password<br />
+                      <br />
+                      <strong>Default Password:</strong> CampJam2025!
                     </p>
                   </div>
 
                   <form onSubmit={handleAddAdmin} className="mb-6 space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Email to Whitelist</label>
+                      <label className="block text-sm font-medium mb-2">New Admin Email</label>
                       <div className="flex gap-2">
                         <Input
                           type="email"
@@ -559,14 +496,14 @@ const Admin = () => {
                         />
                         <Button type="submit">
                           <UserPlus size={18} className="mr-2" />
-                          Add Email
+                          Add Admin
                         </Button>
                       </div>
                     </div>
                   </form>
 
                   <div className="space-y-2">
-                    <h3 className="font-medium mb-3">Whitelisted Admin Emails</h3>
+                    <h3 className="font-medium mb-3">Admin Emails</h3>
                     {adminUsers.map((admin) => (
                       <div
                         key={admin.id}
@@ -578,7 +515,7 @@ const Admin = () => {
                             variant="ghost"
                             size="icon"
                             onClick={() => handleRemoveAdmin(admin.email)}
-                            title="Remove from whitelist"
+                            title="Remove admin"
                           >
                             <X size={18} />
                           </Button>
@@ -586,45 +523,6 @@ const Admin = () => {
                       </div>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {showChangePassword && (
-              <Card className="mb-8 soft-shadow">
-                <CardContent className="p-6">
-                  <h2 className="text-xl font-semibold mb-4">Change Your Password</h2>
-
-                  <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">New Password</label>
-                      <Input
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Enter new password"
-                        required
-                        minLength={6}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Confirm New Password</label>
-                      <Input
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Confirm new password"
-                        required
-                        minLength={6}
-                      />
-                    </div>
-
-                    <Button type="submit" disabled={isLoading}>
-                      <KeySquare size={18} className="mr-2" />
-                      {isLoading ? "Updating..." : "Update Password"}
-                    </Button>
-                  </form>
                 </CardContent>
               </Card>
             )}
