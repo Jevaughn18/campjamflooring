@@ -79,8 +79,25 @@ const Admin = () => {
     e.preventDefault();
     setIsLoading(true);
 
+    // List of approved admin emails - add your friend's email here
+    const APPROVED_ADMIN_EMAILS = [
+      "admin@campjamflooring.com",
+      // Add more approved emails here
+    ];
+
     try {
       if (isSignUp) {
+        // Check if email is approved
+        if (!APPROVED_ADMIN_EMAILS.includes(email.toLowerCase())) {
+          toast({
+            title: "Access Denied",
+            description: "This email is not authorized to create an admin account. Contact the website administrator.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+
         const { error } = await supabase.auth.signUp({
           email,
           password,

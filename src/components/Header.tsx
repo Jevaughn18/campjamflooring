@@ -30,10 +30,11 @@ const Header = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-3">
-            <img 
-              src={campjamLogo} 
-              alt="CampJam Flooring Logo" 
+            <img
+              src={campjamLogo}
+              alt="CampJam Flooring Logo"
               className="h-10 w-10 md:h-12 md:w-12"
+              style={{ mixBlendMode: 'multiply' }}
             />
             <h1 className="text-2xl md:text-3xl font-bold text-primary tracking-wide">
               CampJam Flooring
