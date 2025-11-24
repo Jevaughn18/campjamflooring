@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
-import { Star, Trash2, Lock, Mail, KeyRound, AlertTriangle, UserPlus, Users, X } from "lucide-react";
+import { Star, Trash2, Lock, Mail, KeyRound, AlertTriangle, UserPlus, Users, X, KeySquare } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface Review {
@@ -42,9 +42,9 @@ const Admin = () => {
   const [showAdminManagement, setShowAdminManagement] = useState(false);
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState("");
-  const [newAdminPassword, setNewAdminPassword] = useState("");
-  const [showPasswordReset, setShowPasswordReset] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -177,27 +177,47 @@ const Admin = () => {
     }
   };
 
-  const handlePasswordReset = async (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords do not match.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/admin`,
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
       });
 
       if (error) throw error;
 
       toast({
-        title: "Reset Email Sent!",
-        description: "Check your email for a password reset link.",
+        title: "Password Changed!",
+        description: "Your password has been successfully updated.",
       });
-      setShowPasswordReset(false);
-      setResetEmail("");
+      setShowChangePassword(false);
+      setNewPassword("");
+      setConfirmPassword("");
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to send reset email.",
+        description: error.message || "Failed to change password.",
         variant: "destructive",
       });
     } finally {
@@ -209,7 +229,7 @@ const Admin = () => {
     e.preventDefault();
 
     try {
-      // First, add to admin_users table
+      // Add email to admin_users whitelist table
       const { error: dbError } = await supabase
         .from('admin_users')
         .insert([
@@ -221,30 +241,18 @@ const Admin = () => {
 
       if (dbError) throw dbError;
 
-      // Then create Supabase auth account with temporary password
-      const { error: authError } = await supabase.auth.admin.createUser({
-        email: newAdminEmail,
-        password: newAdminPassword,
-        email_confirm: true,
-      });
-
-      // If auth creation fails but user already exists, that's okay
-      if (authError && !authError.message.includes('already registered')) {
-        throw authError;
-      }
-
       toast({
-        title: "Admin Added!",
-        description: `${newAdminEmail} can now log in with the provided password.`,
+        title: "Admin Email Added!",
+        description: `${newAdminEmail} is now whitelisted. Create their account manually in Supabase Authentication.`,
+        duration: 8000,
       });
 
       setNewAdminEmail("");
-      setNewAdminPassword("");
       fetchAdminUsers();
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to add admin.",
+        description: error.message || "Failed to add admin email.",
         variant: "destructive",
       });
     }
@@ -376,95 +384,50 @@ const Admin = () => {
               Sign in to manage customer reviews
             </p>
 
-            {!showPasswordReset ? (
-              <>
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Email</label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <Input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="your@email.com"
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Password</label>
-                    <div className="relative">
-                      <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <Input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter password"
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-                  >
-                    {isLoading ? "Please wait..." : "Sign In"}
-                  </Button>
-                </form>
-
-                <div className="mt-6 text-center">
-                  <button
-                    onClick={() => setShowPasswordReset(true)}
-                    className="text-sm text-primary hover:underline"
-                  >
-                    Forgot Password Or First Time Logging In?<br />
-                    Click here to Set Or Reset Password
-                  </button>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Email</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    className="pl-10"
+                    required
+                  />
                 </div>
-              </>
-            ) : (
-              <>
-                <form onSubmit={handlePasswordReset} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Email</label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <Input
-                        type="email"
-                        value={resetEmail}
-                        onChange={(e) => setResetEmail(e.target.value)}
-                        placeholder="your@email.com"
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
+              </div>
 
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-                  >
-                    {isLoading ? "Sending..." : "Send Reset Link"}
-                  </Button>
-                </form>
-
-                <div className="mt-6 text-center">
-                  <button
-                    onClick={() => setShowPasswordReset(false)}
-                    className="text-sm text-primary hover:underline"
-                  >
-                    Back to Login
-                  </button>
+              <div>
+                <label className="block text-sm font-medium mb-2">Password</label>
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter password"
+                    className="pl-10"
+                    required
+                  />
                 </div>
-              </>
-            )}
+              </div>
+
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                {isLoading ? "Please wait..." : "Sign In"}
+              </Button>
+            </form>
+
+            <div className="mt-6 text-center text-sm text-muted-foreground">
+              <p>First time logging in? Use the default password provided to you.</p>
+              <p className="mt-2">You can change your password after logging in.</p>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -536,13 +499,26 @@ const Admin = () => {
                 <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
                 <p className="text-muted-foreground">Logged in as: {user.email}</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => setShowAdminManagement(!showAdminManagement)}
+                  onClick={() => {
+                    setShowAdminManagement(!showAdminManagement);
+                    setShowChangePassword(false);
+                  }}
                 >
                   <Users size={18} className="mr-2" />
                   Manage Admins
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowChangePassword(!showChangePassword);
+                    setShowAdminManagement(false);
+                  }}
+                >
+                  <KeySquare size={18} className="mr-2" />
+                  Change Password
                 </Button>
                 <Button
                   variant="outline"
@@ -558,38 +534,39 @@ const Admin = () => {
                 <CardContent className="p-6">
                   <h2 className="text-xl font-semibold mb-4">Manage Admin Users</h2>
 
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <p className="text-sm text-blue-900">
+                      <strong>How to add a new admin:</strong><br />
+                      1. Add their email below to whitelist them<br />
+                      2. Go to Supabase → Authentication → Add User manually<br />
+                      3. Create their account with a default password<br />
+                      4. Share the email and default password with them<br />
+                      5. They can change their password after logging in
+                    </p>
+                  </div>
+
                   <form onSubmit={handleAddAdmin} className="mb-6 space-y-4">
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Email</label>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Email to Whitelist</label>
+                      <div className="flex gap-2">
                         <Input
                           type="email"
                           value={newAdminEmail}
                           onChange={(e) => setNewAdminEmail(e.target.value)}
                           placeholder="new@email.com"
                           required
+                          className="flex-1"
                         />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Default Password</label>
-                        <Input
-                          type="text"
-                          value={newAdminPassword}
-                          onChange={(e) => setNewAdminPassword(e.target.value)}
-                          placeholder="Set temp password"
-                          required
-                          minLength={6}
-                        />
+                        <Button type="submit">
+                          <UserPlus size={18} className="mr-2" />
+                          Add Email
+                        </Button>
                       </div>
                     </div>
-                    <Button type="submit" className="w-full sm:w-auto">
-                      <UserPlus size={18} className="mr-2" />
-                      Add Admin
-                    </Button>
                   </form>
 
                   <div className="space-y-2">
-                    <h3 className="font-medium mb-3">Current Admins</h3>
+                    <h3 className="font-medium mb-3">Whitelisted Admin Emails</h3>
                     {adminUsers.map((admin) => (
                       <div
                         key={admin.id}
@@ -601,6 +578,7 @@ const Admin = () => {
                             variant="ghost"
                             size="icon"
                             onClick={() => handleRemoveAdmin(admin.email)}
+                            title="Remove from whitelist"
                           >
                             <X size={18} />
                           </Button>
@@ -608,6 +586,45 @@ const Admin = () => {
                       </div>
                     ))}
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {showChangePassword && (
+              <Card className="mb-8 soft-shadow">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-semibold mb-4">Change Your Password</h2>
+
+                  <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">New Password</label>
+                      <Input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter new password"
+                        required
+                        minLength={6}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Confirm New Password</label>
+                      <Input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirm new password"
+                        required
+                        minLength={6}
+                      />
+                    </div>
+
+                    <Button type="submit" disabled={isLoading}>
+                      <KeySquare size={18} className="mr-2" />
+                      {isLoading ? "Updating..." : "Update Password"}
+                    </Button>
+                  </form>
                 </CardContent>
               </Card>
             )}
