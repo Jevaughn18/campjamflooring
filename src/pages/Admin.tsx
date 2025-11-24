@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
-import { Star, Trash2, Lock, Mail, KeyRound, AlertTriangle, UserPlus, Users, X } from "lucide-react";
+import { Star, Trash2, Lock, Mail, KeyRound, AlertTriangle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface Review {
@@ -11,13 +11,6 @@ interface Review {
   name: string;
   rating: number;
   comment: string;
-  created_at: string;
-}
-
-interface AdminUser {
-  id: number;
-  email: string;
-  is_active: boolean;
   created_at: string;
 }
 
@@ -39,9 +32,6 @@ const Admin = () => {
     reviewId: null,
     reviewText: ""
   });
-  const [showAdminManagement, setShowAdminManagement] = useState(false);
-  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
-  const [newAdminEmail, setNewAdminEmail] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -82,11 +72,8 @@ const Admin = () => {
   useEffect(() => {
     if (user) {
       fetchReviews();
-      if (showAdminManagement) {
-        fetchAdminUsers();
-      }
     }
-  }, [user, showAdminManagement]);
+  }, [user]);
 
   const checkIfAdmin = async (email: string): Promise<boolean> => {
     try {
@@ -119,20 +106,6 @@ const Admin = () => {
         description: "Failed to load reviews.",
         variant: "destructive",
       });
-    }
-  };
-
-  const fetchAdminUsers = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setAdminUsers(data || []);
-    } catch (error) {
-      console.error('Error fetching admin users:', error);
     }
   };
 
@@ -171,78 +144,6 @@ const Admin = () => {
       });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-
-  const handleAddAdmin = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const DEFAULT_PASSWORD = "CampJam2025!";
-
-    try {
-      // Add to whitelist
-      const { data: insertData, error: dbError } = await supabase
-        .from('admin_users')
-        .insert([
-          {
-            email: newAdminEmail.toLowerCase(),
-            created_by: user.email,
-          }
-        ])
-        .select();
-
-      if (dbError) {
-        throw dbError;
-      }
-
-      toast({
-        title: "Admin Added Successfully!",
-        description: `${newAdminEmail} can now log in with password: ${DEFAULT_PASSWORD}`,
-        duration: 10000,
-      });
-
-      setNewAdminEmail("");
-      fetchAdminUsers();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add admin.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleRemoveAdmin = async (adminEmail: string) => {
-    if (adminEmail === user.email) {
-      toast({
-        title: "Error",
-        description: "You cannot remove yourself.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('admin_users')
-        .delete()
-        .eq('email', adminEmail);
-
-      if (error) throw error;
-
-      toast({
-        title: "Admin Removed",
-        description: `${adminEmail} no longer has admin access.`,
-      });
-
-      fetchAdminUsers();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to remove admin.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -452,80 +353,12 @@ const Admin = () => {
               <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => setShowAdminManagement(!showAdminManagement)}
-                >
-                  <Users size={18} className="mr-2" />
-                  Manage Admins
-                </Button>
-                <Button
-                  variant="outline"
                   onClick={handleLogout}
                 >
                   Logout
                 </Button>
               </div>
             </div>
-
-            {showAdminManagement && (
-              <Card className="mb-8 soft-shadow">
-                <CardContent className="p-6">
-                  <h2 className="text-xl font-semibold mb-4">Manage Admin Users</h2>
-
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                    <p className="text-sm text-blue-900">
-                      <strong>How to add a new admin:</strong><br />
-                      1. Enter their email below and click "Add Admin"<br />
-                      2. Give them the default password shown in the success message<br />
-                      3. They can log in with their email and the default password<br />
-                      <br />
-                      <strong>Default Password:</strong> CampJam2025!
-                    </p>
-                  </div>
-
-                  <form onSubmit={handleAddAdmin} className="mb-6 space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">New Admin Email</label>
-                      <div className="flex gap-2">
-                        <Input
-                          type="email"
-                          value={newAdminEmail}
-                          onChange={(e) => setNewAdminEmail(e.target.value)}
-                          placeholder="new@email.com"
-                          required
-                          className="flex-1"
-                        />
-                        <Button type="submit">
-                          <UserPlus size={18} className="mr-2" />
-                          Add Admin
-                        </Button>
-                      </div>
-                    </div>
-                  </form>
-
-                  <div className="space-y-2">
-                    <h3 className="font-medium mb-3">Admin Emails</h3>
-                    {adminUsers.map((admin) => (
-                      <div
-                        key={admin.id}
-                        className="flex items-center justify-between p-3 bg-muted rounded-lg"
-                      >
-                        <span className="text-sm">{admin.email}</span>
-                        {admin.email !== user.email && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRemoveAdmin(admin.email)}
-                            title="Remove admin"
-                          >
-                            <X size={18} />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             <h2 className="text-2xl font-semibold mb-4">Customer Reviews</h2>
             {reviews.length > 0 ? (
