@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import campjamLogo from "@/assets/campjam-logo.png";
+import campjamLogo from "@/assets/transparentlogo.png";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -34,7 +34,6 @@ const Header = () => {
               src={campjamLogo}
               alt="CampJam Flooring Logo"
               className="h-10 w-10 md:h-12 md:w-12"
-              style={{ mixBlendMode: 'multiply' }}
             />
             <h1 className="text-2xl md:text-3xl font-bold text-primary tracking-wide">
               CampJam Flooring

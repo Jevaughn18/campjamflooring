@@ -173,6 +173,8 @@ const Gallery = () => {
                 <img
                   src={project.thumbnail}
                   alt={project.title}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
               </div>
@@ -220,6 +222,8 @@ const Gallery = () => {
                   <img
                     src={selectedProject.media[currentMediaIndex].src}
                     alt={`${selectedProject.title} - ${currentMediaIndex + 1}`}
+                    loading="eager"
+                    decoding="async"
                     className="max-w-full max-h-full object-contain rounded-lg"
                   />
                 ) : (
@@ -227,6 +231,7 @@ const Gallery = () => {
                     src={selectedProject.media[currentMediaIndex].src}
                     controls
                     autoPlay
+                    preload="metadata"
                     className="max-w-full max-h-full object-contain rounded-lg"
                   />
                 )}
@@ -270,6 +275,8 @@ const Gallery = () => {
                       <img
                         src={media.src}
                         alt={`Thumbnail ${index + 1}`}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover"
                       />
                     ) : (
