@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
-import { Star, Trash2, Lock, Mail, KeyRound, AlertTriangle } from "lucide-react";
+import { Star, Trash2, Lock, Mail, KeyRound, AlertTriangle, UserPlus, Users, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface Review {
@@ -11,6 +11,13 @@ interface Review {
   name: string;
   rating: number;
   comment: string;
+  created_at: string;
+}
+
+interface AdminUser {
+  id: number;
+  email: string;
+  is_active: boolean;
   created_at: string;
 }
 
@@ -25,7 +32,6 @@ const Admin = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirmation>({
@@ -33,18 +39,44 @@ const Admin = () => {
     reviewId: null,
     reviewText: ""
   });
+  const [showAdminManagement, setShowAdminManagement] = useState(false);
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
+  const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [newAdminPassword, setNewAdminPassword] = useState("");
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
 
   useEffect(() => {
-    // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      if (session?.user) {
+        checkIfAdmin(session.user.email!).then(isAdmin => {
+          if (isAdmin) {
+            setUser(session.user);
+          } else {
+            toast({
+              title: "Access Denied",
+              description: "You are not authorized to access this panel.",
+              variant: "destructive",
+            });
+            supabase.auth.signOut();
+          }
+        });
+      }
       setIsLoading(false);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      if (session?.user) {
+        checkIfAdmin(session.user.email!).then(isAdmin => {
+          if (isAdmin) {
+            setUser(session.user);
+          }
+        });
+      } else {
+        setUser(null);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -53,8 +85,26 @@ const Admin = () => {
   useEffect(() => {
     if (user) {
       fetchReviews();
+      if (showAdminManagement) {
+        fetchAdminUsers();
+      }
     }
-  }, [user]);
+  }, [user, showAdminManagement]);
+
+  const checkIfAdmin = async (email: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('email, is_active')
+        .eq('email', email.toLowerCase())
+        .eq('is_active', true)
+        .single();
+
+      return !error && data !== null;
+    } catch {
+      return false;
+    }
+  };
 
   const fetchReviews = async () => {
     try {
@@ -75,59 +125,161 @@ const Admin = () => {
     }
   };
 
-  const handleAuth = async (e: React.FormEvent) => {
+  const fetchAdminUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setAdminUsers(data || []);
+    } catch (error) {
+      console.error('Error fetching admin users:', error);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // List of approved admin emails - add your friend's email here
-    const APPROVED_ADMIN_EMAILS = [
-      "admin@campjamflooring.com",
-      // Add more approved emails here
-    ];
-
     try {
-      if (isSignUp) {
-        // Check if email is approved
-        if (!APPROVED_ADMIN_EMAILS.includes(email.toLowerCase())) {
-          toast({
-            title: "Access Denied",
-            description: "This email is not authorized to create an admin account. Contact the website administrator.",
-            variant: "destructive",
-          });
-          setIsLoading(false);
-          return;
-        }
-
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-        if (error) throw error;
-
+      // Check if email is in admin_users table
+      const isAdmin = await checkIfAdmin(email);
+      if (!isAdmin) {
         toast({
-          title: "Account Created!",
-          description: "Check your email to verify your account.",
+          title: "Access Denied",
+          description: "This email is not authorized to access the admin panel.",
+          variant: "destructive",
         });
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-
-        toast({
-          title: "Welcome Back!",
-          description: "You've successfully logged in.",
-        });
+        setIsLoading(false);
+        return;
       }
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+
+      toast({
+        title: "Welcome Back!",
+        description: "You've successfully logged in.",
+      });
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Authentication failed. Please try again.",
+        description: error.message || "Login failed. Please check your credentials.",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/admin`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Reset Email Sent!",
+        description: "Check your email for a password reset link.",
+      });
+      setShowPasswordReset(false);
+      setResetEmail("");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send reset email.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      // First, add to admin_users table
+      const { error: dbError } = await supabase
+        .from('admin_users')
+        .insert([
+          {
+            email: newAdminEmail.toLowerCase(),
+            created_by: user.email,
+          }
+        ]);
+
+      if (dbError) throw dbError;
+
+      // Then create Supabase auth account with temporary password
+      const { error: authError } = await supabase.auth.admin.createUser({
+        email: newAdminEmail,
+        password: newAdminPassword,
+        email_confirm: true,
+      });
+
+      // If auth creation fails but user already exists, that's okay
+      if (authError && !authError.message.includes('already registered')) {
+        throw authError;
+      }
+
+      toast({
+        title: "Admin Added!",
+        description: `${newAdminEmail} can now log in with the provided password.`,
+      });
+
+      setNewAdminEmail("");
+      setNewAdminPassword("");
+      fetchAdminUsers();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add admin.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRemoveAdmin = async (adminEmail: string) => {
+    if (adminEmail === user.email) {
+      toast({
+        title: "Error",
+        description: "You cannot remove yourself.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('admin_users')
+        .delete()
+        .eq('email', adminEmail);
+
+      if (error) throw error;
+
+      toast({
+        title: "Admin Removed",
+        description: `${adminEmail} no longer has admin access.`,
+      });
+
+      fetchAdminUsers();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove admin.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -207,7 +359,7 @@ const Admin = () => {
     ));
   };
 
-  // Login/Signup Screen
+  // Login Screen
   if (!user) {
     return (
       <div className="min-h-screen bg-secondary/30 flex items-center justify-center p-4">
@@ -219,71 +371,100 @@ const Admin = () => {
               </div>
             </div>
 
-            <h1 className="text-2xl font-bold text-center mb-2">
-              {isSignUp ? "Create Admin Account" : "Admin Login"}
-            </h1>
+            <h1 className="text-2xl font-bold text-center mb-2">Admin Login</h1>
             <p className="text-muted-foreground text-center mb-6">
-              {isSignUp
-                ? "Sign up with your email and password"
-                : "Sign in to manage customer reviews"}
+              Sign in to manage customer reviews
             </p>
 
-            <form onSubmit={handleAuth} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Email</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    className="pl-10"
-                    required
-                  />
+            {!showPasswordReset ? (
+              <>
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Email</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="your@email.com"
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Password</label>
+                    <div className="relative">
+                      <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter password"
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    {isLoading ? "Please wait..." : "Sign In"}
+                  </Button>
+                </form>
+
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={() => setShowPasswordReset(true)}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Forgot Password Or First Time Logging In?<br />
+                    Click here to Set Or Reset Password
+                  </button>
                 </div>
-              </div>
+              </>
+            ) : (
+              <>
+                <form onSubmit={handlePasswordReset} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Email</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Input
+                        type="email"
+                        value={resetEmail}
+                        onChange={(e) => setResetEmail(e.target.value)}
+                        placeholder="your@email.com"
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">Password</label>
-                <div className="relative">
-                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter password"
-                    className="pl-10"
-                    required
-                    minLength={6}
-                  />
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    {isLoading ? "Sending..." : "Send Reset Link"}
+                  </Button>
+                </form>
+
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={() => setShowPasswordReset(false)}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Back to Login
+                  </button>
                 </div>
-                {isSignUp && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Must be at least 6 characters
-                  </p>
-                )}
-              </div>
-
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                {isLoading ? "Please wait..." : (isSignUp ? "Sign Up" : "Sign In")}
-              </Button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <button
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-sm text-primary hover:underline"
-              >
-                {isSignUp
-                  ? "Already have an account? Sign In"
-                  : "Don't have an account? Sign Up"}
-              </button>
-            </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -352,17 +533,86 @@ const Admin = () => {
           <div className="max-w-4xl mx-auto">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Review Management</h1>
+                <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
                 <p className="text-muted-foreground">Logged in as: {user.email}</p>
               </div>
-              <Button
-                variant="outline"
-                onClick={handleLogout}
-              >
-                Logout
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAdminManagement(!showAdminManagement)}
+                >
+                  <Users size={18} className="mr-2" />
+                  Manage Admins
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </div>
             </div>
 
+            {showAdminManagement && (
+              <Card className="mb-8 soft-shadow">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-semibold mb-4">Manage Admin Users</h2>
+
+                  <form onSubmit={handleAddAdmin} className="mb-6 space-y-4">
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Email</label>
+                        <Input
+                          type="email"
+                          value={newAdminEmail}
+                          onChange={(e) => setNewAdminEmail(e.target.value)}
+                          placeholder="new@email.com"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Default Password</label>
+                        <Input
+                          type="text"
+                          value={newAdminPassword}
+                          onChange={(e) => setNewAdminPassword(e.target.value)}
+                          placeholder="Set temp password"
+                          required
+                          minLength={6}
+                        />
+                      </div>
+                    </div>
+                    <Button type="submit" className="w-full sm:w-auto">
+                      <UserPlus size={18} className="mr-2" />
+                      Add Admin
+                    </Button>
+                  </form>
+
+                  <div className="space-y-2">
+                    <h3 className="font-medium mb-3">Current Admins</h3>
+                    {adminUsers.map((admin) => (
+                      <div
+                        key={admin.id}
+                        className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                      >
+                        <span className="text-sm">{admin.email}</span>
+                        {admin.email !== user.email && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveAdmin(admin.email)}
+                          >
+                            <X size={18} />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            <h2 className="text-2xl font-semibold mb-4">Customer Reviews</h2>
             {reviews.length > 0 ? (
               <div className="space-y-4">
                 {reviews.map((review) => (
