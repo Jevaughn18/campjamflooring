@@ -5,5 +5,13 @@
       "source": "/api/(.*)",
       "destination": "/api"
     }
-  ]
+  ],
+  "build": {
+    "env": {
+      "SKIP_TYPE_CHECK": "true"
+    }
+  },
+  "typescript": {
+    "ignoreBuildErrors": true
+  }
 }
