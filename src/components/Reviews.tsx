@@ -5,14 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { Star } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { reviewsAPI } from "@/lib/api";
 
 interface Review {
-  id: number;
+  _id: string;
   name: string;
   rating: number;
   comment: string;
-  created_at: string;
+  createdAt: string;
 }
 
 const Reviews = () => {
@@ -26,20 +26,14 @@ const Reviews = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load reviews from Supabase on mount
+  // Load reviews from MongoDB on mount
   useEffect(() => {
     fetchReviews();
   }, []);
 
   const fetchReviews = async () => {
     try {
-      const { data, error } = await supabase
-        .from('reviews')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
+      const data = await reviewsAPI.getAll();
       setReviews(data || []);
     } catch (error) {
       console.error('Error fetching reviews:', error);
@@ -77,18 +71,11 @@ const Reviews = () => {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('reviews')
-        .insert([
-          {
-            name: formData.name,
-            rating: formData.rating,
-            comment: formData.comment,
-          }
-        ])
-        .select();
-
-      if (error) throw error;
+      await reviewsAPI.create({
+        name: formData.name,
+        rating: formData.rating,
+        comment: formData.comment,
+      });
 
       // Refresh reviews list
       await fetchReviews();
@@ -245,13 +232,13 @@ const Reviews = () => {
         ) : reviews.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {reviews.map((review) => (
-              <Card key={review.id} className="soft-shadow hover:elegant-shadow transition-all duration-300">
+              <Card key={review._id} className="soft-shadow hover:elegant-shadow transition-all duration-300">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex gap-1">
                       {renderStars(review.rating)}
                     </div>
-                    <span className="text-sm text-muted-foreground">{formatDate(review.created_at)}</span>
+                    <span className="text-sm text-muted-foreground">{formatDate(review.createdAt)}</span>
                   </div>
 
                   <p className="text-foreground mb-4 italic">"{review.comment}"</p>

@@ -3,20 +3,21 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
-import { Star, Trash2, Lock, Mail, KeyRound, AlertTriangle } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { Star, Trash2, Lock, Mail, KeyRound, AlertTriangle, ImageIcon, MessageSquare } from "lucide-react";
+import { authAPI, reviewsAPI } from "@/lib/api";
+import { GalleryManager } from "@/components/admin/GalleryManager";
 
 interface Review {
-  id: number;
+  _id: string;
   name: string;
   rating: number;
   comment: string;
-  created_at: string;
+  createdAt: string;
 }
 
 interface DeleteConfirmation {
   isOpen: boolean;
-  reviewId: number | null;
+  reviewId: string | null;
   reviewText: string;
 }
 
@@ -25,8 +26,9 @@ const Admin = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [activeTab, setActiveTab] = useState<"reviews" | "gallery">("gallery");
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirmation>({
     isOpen: false,
     reviewId: null,
@@ -34,39 +36,7 @@ const Admin = () => {
   });
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        checkIfAdmin(session.user.email!).then(isAdmin => {
-          if (isAdmin) {
-            setUser(session.user);
-          } else {
-            toast({
-              title: "Access Denied",
-              description: "You are not authorized to access this panel.",
-              variant: "destructive",
-            });
-            supabase.auth.signOut();
-          }
-        });
-      }
-      setIsLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        checkIfAdmin(session.user.email!).then(isAdmin => {
-          if (isAdmin) {
-            setUser(session.user);
-          }
-        });
-      } else {
-        setUser(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    checkAuthStatus();
   }, []);
 
   useEffect(() => {
@@ -75,29 +45,20 @@ const Admin = () => {
     }
   }, [user]);
 
-  const checkIfAdmin = async (email: string): Promise<boolean> => {
+  const checkAuthStatus = async () => {
     try {
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('email, is_active')
-        .eq('email', email.toLowerCase())
-        .eq('is_active', true)
-        .single();
-
-      return !error && data !== null;
-    } catch {
-      return false;
+      const currentUser = await authAPI.getCurrentUser();
+      setUser(currentUser);
+    } catch (error) {
+      setUser(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const fetchReviews = async () => {
     try {
-      const { data, error } = await supabase
-        .from('reviews')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      const data = await reviewsAPI.getAll();
       setReviews(data || []);
     } catch (error) {
       console.error('Error fetching reviews:', error);
@@ -114,23 +75,8 @@ const Admin = () => {
     setIsLoading(true);
 
     try {
-      // Check if email is in admin_users table
-      const isAdmin = await checkIfAdmin(email);
-      if (!isAdmin) {
-        toast({
-          title: "Access Denied",
-          description: "This email is not authorized to access the admin panel.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) throw error;
+      const userData = await authAPI.login(email, password);
+      setUser(userData);
 
       toast({
         title: "Welcome Back!",
@@ -139,7 +85,7 @@ const Admin = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Login failed. Please check your credentials.",
+        description: error.response?.data?.error || "Login failed. Please check your credentials.",
         variant: "destructive",
       });
     } finally {
@@ -148,15 +94,20 @@ const Admin = () => {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    toast({
-      title: "Logged Out",
-      description: "You've been successfully logged out.",
-    });
+    try {
+      await authAPI.logout();
+      setUser(null);
+      toast({
+        title: "Logged Out",
+        description: "You've been successfully logged out.",
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      setUser(null);
+    }
   };
 
-  const openDeleteConfirm = (id: number, comment: string) => {
+  const openDeleteConfirm = (id: string, comment: string) => {
     setDeleteConfirm({
       isOpen: true,
       reviewId: id,
@@ -179,14 +130,9 @@ const Admin = () => {
     closeDeleteConfirm();
 
     try {
-      const { error } = await supabase
-        .from('reviews')
-        .delete()
-        .eq('id', deleteConfirm.reviewId);
+      await reviewsAPI.delete(deleteConfirm.reviewId);
 
-      if (error) throw error;
-
-      setReviews(reviews.filter(review => review.id !== deleteConfirm.reviewId));
+      setReviews(reviews.filter(review => review._id !== deleteConfirm.reviewId));
       toast({
         title: "Review Deleted",
         description: "The review has been permanently deleted.",
@@ -361,11 +307,50 @@ const Admin = () => {
               </div>
             </div>
 
-            <h2 className="text-xl sm:text-2xl font-semibold mb-4">Customer Reviews</h2>
+            <div className="flex gap-2 mb-6 border-b border-border">
+              <button
+                onClick={() => setActiveTab("gallery")}
+                className={`px-4 py-2 font-medium transition-colors relative ${
+                  activeTab === "gallery"
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4" />
+                  Gallery
+                </div>
+                {activeTab === "gallery" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab("reviews")}
+                className={`px-4 py-2 font-medium transition-colors relative ${
+                  activeTab === "reviews"
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4" />
+                  Reviews
+                </div>
+                {activeTab === "reviews" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                )}
+              </button>
+            </div>
+
+            {activeTab === "gallery" && <GalleryManager />}
+
+            {activeTab === "reviews" && (
+              <>
+                <h2 className="text-xl sm:text-2xl font-semibold mb-4">Customer Reviews</h2>
             {reviews.length > 0 ? (
               <div className="space-y-4">
                 {reviews.map((review) => (
-                  <Card key={review.id} className="soft-shadow">
+                  <Card key={review._id} className="soft-shadow">
                     <CardContent className="p-4 sm:p-6">
                       <div className="flex items-start justify-between gap-2 sm:gap-4">
                         <div className="flex-1 min-w-0">
@@ -374,7 +359,7 @@ const Admin = () => {
                               {renderStars(review.rating)}
                             </div>
                             <span className="text-xs sm:text-sm text-muted-foreground">
-                              {formatDate(review.created_at)}
+                              {formatDate(review.createdAt)}
                             </span>
                           </div>
 
@@ -386,11 +371,11 @@ const Admin = () => {
                         <Button
                           variant="destructive"
                           size="icon"
-                          onClick={() => openDeleteConfirm(review.id, review.comment)}
-                          disabled={deletingId === review.id}
+                          onClick={() => openDeleteConfirm(review._id, review.comment)}
+                          disabled={deletingId === review._id}
                           className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10"
                         >
-                          {deletingId === review.id ? (
+                          {deletingId === review._id ? (
                             <span className="animate-spin text-sm">⏳</span>
                           ) : (
                             <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -405,6 +390,8 @@ const Admin = () => {
               <div className="text-center py-12">
                 <p className="text-lg sm:text-xl text-muted-foreground">No reviews yet.</p>
               </div>
+            )}
+              </>
             )}
           </div>
         </div>
