@@ -7,6 +7,7 @@
     "dev": "concurrently \"npm run server:dev\" \"vite\"",
     "server:dev": "tsx watch server/index.ts",
     "server": "tsx server/index.ts",
+    "server:prod": "NODE_ENV=production tsx server/index.ts",
     "client": "vite",
     "seed:admin": "tsx server/scripts/seedAdmin.ts",
     "reset:password": "tsx server/scripts/resetAdminPassword.ts",

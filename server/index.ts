@@ -23,8 +23,8 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
-    ? 'https://your-production-domain.com'
-    : ['http://localhost:5173', 'http://localhost:8080', 'http://localhost:8081', 'http://localhost:3001'],
+    ? ['https://campjamflooring.vercel.app', process.env.FRONTEND_URL || 'https://campjamflooring.vercel.app']
+    : ['http://localhost:5173', 'http://localhost:8080', 'http://localhost:8081', 'http://localhost:8082', 'http://localhost:3001'],
   credentials: true,
 }));
 app.use(express.json());
@@ -57,21 +57,17 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
-// Start server AFTER MongoDB connects
-const startServer = async () => {
-  try {
-    await connectDB();
+// Initialize database connection
+connectDB().catch(err => {
+  console.error('Failed to connect to MongoDB:', err);
+});
 
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-      console.log(`CORS enabled for: http://localhost:5173, http://localhost:8080, http://localhost:8081, http://localhost:3001`);
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
-  }
-};
-
-startServer();
+// Start server only in non-serverless environments
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+    console.log(`CORS enabled for: http://localhost:5173, http://localhost:8080, http://localhost:8081, http://localhost:8082, http://localhost:3001`);
+  });
+}
 
 export default app;
