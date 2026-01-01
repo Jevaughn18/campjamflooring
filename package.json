@@ -14,7 +14,7 @@
     "migrate": "tsx server/scripts/migrateFromSupabase.ts",
     "migrate:local": "tsx server/scripts/migrateLocalProjects.ts",
     "migrate:reviews": "tsx server/scripts/migrateReviewsManual.ts",
-    "build": "mkdir -p dist && echo '{}' > dist/.gitkeep",
+    "build": "tsc --project tsconfig.server.json && cp -r server/models dist/server/ && cp -r server/middleware dist/server/ && cp -r server/config dist/server/ && cp -r server/routes dist/server/",
     "build:frontend": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
