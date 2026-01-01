@@ -22,20 +22,23 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Security Middleware
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow images from Cloudinary
-  contentSecurityPolicy: false, // Disable CSP for now (can be configured later)
-}));
-app.use(mongoSanitize()); // Prevent NoSQL injection
-
-// CORS
+// CORS - Must be applied BEFORE other middleware
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
     ? ['https://campjamflooring.vercel.app', process.env.FRONTEND_URL || 'https://campjamflooring.vercel.app']
     : ['http://localhost:5173', 'http://localhost:8080', 'http://localhost:8081', 'http://localhost:8082', 'http://localhost:3001'],
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
+// Security Middleware
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow images from Cloudinary
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+  contentSecurityPolicy: false, // Disable CSP for now (can be configured later)
+}));
+app.use(mongoSanitize()); // Prevent NoSQL injection
 
 // Body parsing and cookies
 app.use(express.json({ limit: '10mb' })); // Limit payload size
