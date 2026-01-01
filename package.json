@@ -14,7 +14,7 @@
     "migrate": "tsx server/scripts/migrateFromSupabase.ts",
     "migrate:local": "tsx server/scripts/migrateLocalProjects.ts",
     "migrate:reviews": "tsx server/scripts/migrateReviewsManual.ts",
-    "build": "npx tsc --project tsconfig.server.json",
+    "build": "node_modules/.bin/tsc --project tsconfig.server.json",
     "build:frontend": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
