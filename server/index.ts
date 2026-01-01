@@ -46,21 +46,28 @@ app.use(cookieParser());
 // Custom NoSQL injection protection middleware (Express 5 compatible)
 app.use((req, res, next) => {
   const sanitize = (obj: any): any => {
-    if (obj && typeof obj === 'object') {
-      for (const key in obj) {
-        if (key.startsWith('$') || key.includes('.')) {
-          delete obj[key];
-        } else {
-          obj[key] = sanitize(obj[key]);
-        }
+    if (!obj || typeof obj !== 'object') return obj;
+
+    const cleaned: any = Array.isArray(obj) ? [] : {};
+
+    for (const key in obj) {
+      // Skip keys that start with $ or contain . (NoSQL operators)
+      if (key.startsWith('$') || key.includes('.')) {
+        continue;
       }
+      cleaned[key] = sanitize(obj[key]);
     }
-    return obj;
+
+    return cleaned;
   };
 
-  if (req.body) req.body = sanitize(req.body);
-  if (req.query) req.query = sanitize(req.query);
-  if (req.params) req.params = sanitize(req.params);
+  try {
+    if (req.body && Object.keys(req.body).length > 0) {
+      req.body = sanitize(req.body);
+    }
+  } catch (err) {
+    console.warn('Failed to sanitize request body:', err);
+  }
 
   next();
 });
