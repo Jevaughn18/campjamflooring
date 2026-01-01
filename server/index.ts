@@ -38,7 +38,9 @@ app.use(helmet({
   crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
   contentSecurityPolicy: false, // Disable CSP for now (can be configured later)
 }));
-app.use(mongoSanitize()); // Prevent NoSQL injection
+app.use(mongoSanitize({
+  replaceWith: '_', // Replace prohibited characters instead of removing properties (Express 5 compatibility)
+})); // Prevent NoSQL injection
 
 // Body parsing and cookies
 app.use(express.json({ limit: '10mb' })); // Limit payload size
