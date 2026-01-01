@@ -14,7 +14,8 @@
     "migrate": "tsx server/scripts/migrateFromSupabase.ts",
     "migrate:local": "tsx server/scripts/migrateLocalProjects.ts",
     "migrate:reviews": "tsx server/scripts/migrateReviewsManual.ts",
-    "build": "vite build",
+    "build": "echo 'No build needed for backend'",
+    "build:frontend": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview"
