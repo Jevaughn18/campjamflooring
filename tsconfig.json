@@ -6,11 +6,14 @@
     "paths": {
       "@/*": ["./src/*"]
     },
+    "moduleResolution": "bundler",
     "noImplicitAny": false,
     "noUnusedParameters": false,
     "skipLibCheck": true,
     "allowJs": true,
     "noUnusedLocals": false,
-    "strictNullChecks": false
+    "strictNullChecks": false,
+    "allowImportingTsExtensions": true,
+    "noEmit": true
   }
 }
