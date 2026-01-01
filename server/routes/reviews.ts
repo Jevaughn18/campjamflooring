@@ -1,8 +1,18 @@
 import express, { Request, Response } from 'express';
+import rateLimit from 'express-rate-limit';
 import Review from '../models/Review';
 import { auth, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
+
+// Rate limiter for review creation
+const reviewLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3, // 3 reviews per hour per IP
+  message: 'Too many reviews submitted from this IP, please try again after an hour',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Get all reviews (public)
 router.get('/', async (req: Request, res: Response) => {
@@ -19,7 +29,7 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // Create review (public)
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', reviewLimiter, async (req: Request, res: Response) => {
   try {
     const { name, rating, comment } = req.body;
 

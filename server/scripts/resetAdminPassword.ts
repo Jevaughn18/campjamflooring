@@ -25,7 +25,7 @@ const resetAdminPassword = async () => {
     }
 
     // Set new password
-    const newPassword = 'Admin2025!';
+    const newPassword = 'CampJam2025!';
     admin.password = newPassword;
     await admin.save();
 
